@@ -2,6 +2,7 @@ var express       = require('express');
 var bodyParser    = require('body-parser');
 var request       = require('request');
 var dotenv        = require('dotenv');
+var auth          = require('http-auth');
 var SpotifyWebApi = require('spotify-web-api-node');
 
 dotenv.load();
@@ -12,11 +13,19 @@ var spotifyApi = new SpotifyWebApi({
   redirectUri  : process.env.SPOTIFY_REDIRECT_URI
 });
 
+var basic = auth.basic({
+        realm: "Web."
+    }, function (username, password, callback) { // Custom authentication method.
+        callback(username === process.env.HTTPUSER && password === process.env.HTTPPASS);
+    }
+);
+
 var app = express();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
   extended: true
 }));
+app.use(auth.connect(basic));
 
 app.get('/', function(req, res) {
   if (spotifyApi.getAccessToken()) {
@@ -54,12 +63,12 @@ app.post('/store', function(req, res) {
   spotifyApi.refreshAccessToken()
     .then(function(data) {
       spotifyApi.setAccessToken(data.body['access_token']);
-      if (data.body['refresh_token']) { 
+      if (data.body['refresh_token']) {
         spotifyApi.setRefreshToken(data.body['refresh_token']);
       }
       if(req.body.text.indexOf(' - ') === -1) {
         var query = 'track:' + req.body.text;
-      } else { 
+      } else {
         var pieces = req.body.text.split(' - ');
         var query = 'artist:' + pieces[0].trim() + ' track:' + pieces[1].trim();
       }
