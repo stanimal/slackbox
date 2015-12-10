@@ -1,10 +1,11 @@
 var ApiFunctions = {
   help: function() {
-    var msg = "/jukebox help <show this>\n\
-               /jukebox add <show this>"
+    var msg = "@channel:\n" +
+      "/jukebox help <show this>" +
+      "/jukebox add <show this>";
     return msg;
   },
-  addToPlaylist: function(request_array) {
+  addToPlaylist: function(spotifyApi, request_array) {
     var request_string = request_array.join(' ');
     if(request_string.indexOf(' - ') === -1) {
       var query = 'track:' + request_string;

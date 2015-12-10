@@ -78,7 +78,7 @@ app.post('/api', function(req, res) {
           break;
         case 'add':
         default:
-          response = api.addToPlaylist(request_array);
+          response = api.addToPlaylist(spotifyApi, request_array);
       }
 
       return res.send(response);
