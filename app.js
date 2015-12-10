@@ -3,6 +3,7 @@ var bodyParser    = require('body-parser');
 var request       = require('request');
 var dotenv        = require('dotenv');
 var auth          = require('http-auth');
+var api          = require('./api.js');
 var SpotifyWebApi = require('spotify-web-api-node');
 
 dotenv.load();
@@ -58,6 +59,35 @@ app.use('/store', function(req, res, next) {
   }
   next();
 });
+
+
+app.post('/api', function(req, res) {
+  spotifyApi.refreshAccessToken()
+    .then(function(data) {
+      spotifyApi.setAccessToken(data.body['access_token']);
+      if (data.body['refresh_token']) {
+        spotifyApi.setRefreshToken(data.body['refresh_token']);
+      }
+      var request_string = req.body.text;
+      var request_array = request_string.split(" ");
+      var command = request_array.shift();
+
+      switch(command) {
+        case 'help':
+          response = api.help();
+          break;
+        case 'add':
+        default:
+          response = api.addToPlaylist(request_array);
+      }
+
+      return res.send(response);
+
+    }, function(err) {
+      return res.send('Could not refresh access token. You probably need to re-authorise yourself from your app\'s homepage.');
+    });
+});
+
 
 app.post('/store', function(req, res) {
   spotifyApi.refreshAccessToken()
