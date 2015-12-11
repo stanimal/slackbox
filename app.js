@@ -68,6 +68,7 @@ app.post('/api', function(req, res) {
       if (data.body['refresh_token']) {
         spotifyApi.setRefreshToken(data.body['refresh_token']);
       }
+
       var request_string = req.body.text;
       var request_array = request_string.split(" ");
       var command = request_array.shift();
@@ -75,13 +76,56 @@ app.post('/api', function(req, res) {
       switch(command) {
         case 'help':
           response = api.help();
+          return res.send(response);
           break;
+        case 'view':
+          spotifyApi.getPlaylist(process.env.SPOTIFY_USERNAME, process.env.SPOTIFY_PLAYLIST_ID)
+            .then(function(data) {
+             //res.send(data.body.tracks.items);
+             var results = data.body.tracks.items;
+             var playlist = 'Play List\n';
+             for (var i=0, len=results.length;i<len;i++) {
+               var trackobj = results[i];
+               playlist += (i+1) + ": " + trackobj.track.name + " by " + trackobj.track.artists[0].name + "\n";
+             }
+
+              res.send('Some information about this playlist', playlist);
+            }, function(err) {
+              res.send('Something went wrong!', err);
+            });
+          break;
+
         case 'add':
         default:
-          response = api.addToPlaylist(spotifyApi, request_array);
-      }
+          //response = api.addToPlaylist(spotifyApi, request_array);
+          var request_string = request_array.join(' ');
+          if(request_string.indexOf(' - ') === -1) {
+            var query = 'track:' + request_string;
+          } else {
+            var pieces = request_string.split(' - ');
+            var query = 'artist:' + pieces[0].trim() + ' track:' + pieces[1].trim();
+          }
+          var response = query + " cache";
+          spotifyApi.searchTracks(query)
+            .then(function(data) {
+              var results = data.body.tracks.items;
+              if (results.length === 0) {
+                res.send('Could not find that track.');
+              }
+              var track = results[0];
 
-      return res.send(response);
+              spotifyApi.addTracksToPlaylist(process.env.SPOTIFY_USERNAME, process.env.SPOTIFY_PLAYLIST_ID, ['spotify:track:' + track.id])
+                .then(function(data) {
+                  res.send('Track added: *' + track.name + '* by *' + track.artists[0].name + '*');
+                }, function(err) {
+                  res.send(err.message);
+                });
+            }, function(err) {
+              res.send(err.message);
+            });
+
+          break;
+      }
 
     }, function(err) {
       return res.send('Could not refresh access token. You probably need to re-authorise yourself from your app\'s homepage.');
