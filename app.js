@@ -79,11 +79,11 @@ app.post('/api', function(req, res) {
           return res.send(response);
           break;
         case 'view':
-          spotifyApi.getPlaylist(process.env.SPOTIFY_USERNAME, process.env.SPOTIFY_PLAYLIST_ID)
+          spotifyApi.getPlaylistTracks(process.env.SPOTIFY_USERNAME, process.env.SPOTIFY_PLAYLIST_ID)
             .then(function(data) {
              //res.send(data.body.tracks.items);
-             var results = data.body.tracks.items;
-             var playlist = 'Play List\n';
+             var results = data.body.items;
+             var playlist = '*Current Play List*\n';
              for (var i=0, len=results.length;i<len;i++) {
                var trackobj = results[i];
                playlist += (i+1) + ": " + trackobj.track.name + " by " + trackobj.track.artists[0].name + "\n";
