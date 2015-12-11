@@ -1,8 +1,9 @@
 var ApiFunctions = {
   help: function() {
-    var msg = "@channel:\n" +
-      "/jukebox help <show this>" +
-      "/jukebox view <display current tracklisting>";
+    var msg = "\n" +
+      "/jukebox help *shows this text*\n" +
+      "/jukebox view *displays current tracklisting*\n" +
+      "/jukebox add <song title and artist> *adds song to playlist*\n"
     return msg;
   }
 };
